@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sway</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Sway is a tiny ambient mini app where a single line sways like a reed in the wind. Tap to guide todays wind and watch your daily pattern form.">
+  <meta property="og:title" content="Sway">
+  <meta property="og:description" content="Sway is a tiny ambient mini app where a single line sways like a reed in the wind. Tap to guide todays wind and watch your daily pattern form.">
+  <meta property="og:image" content="https://sway-mini.vercel.app/assets/hero.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sway-mini.vercel.app/">
+  <meta name="fc:miniapp" content='{"version":"1","name":"Sway","iconUrl":"https://sway-mini.vercel.app/assets/icon.png","imageUrl":"https://sway-mini.vercel.app/assets/embed-3x2.png","button":{"title":"Open Sway","action":{"type":"launch_frame","url":"https://sway-mini.vercel.app/"}},"splashImageUrl":"https://sway-mini.vercel.app/assets/splash.png","splashBackgroundColor":"#020617"}'>
+  <meta property="fc:frame" content='{"version":"vNext","imageUrl":"https://sway-mini.vercel.app/assets/embed-3x2.png","button":{"title":"Open Sway","action":{"type":"launch_frame","url":"https://sway-mini.vercel.app/"}},"splashImageUrl":"https://sway-mini.vercel.app/assets/splash.png","splashBackgroundColor":"#020617"}'>
+  <meta name="theme-color" content="#020617">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020617;
+      --fg: #e5e7eb;
+      --accent: #38bdf8;
+      --muted: #64748b;
+      --card: #020617;
+      --border: rgba(148, 163, 184, 0.35);
+      --sway-angle: 10deg;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      color: var(--fg);
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      margin-inline: auto;
+      padding: 20px 16px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .app-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      padding: 16px 14px 18px;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.10), rgba(15, 23, 42, 0.95));
+      box-shadow:
+        0 18px 40px rgba(15, 23, 42, 0.8),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sway-shell {
+      position: relative;
+      border-radius: 18px;
+      padding: 18px 12px 18px;
+      background: radial-gradient(circle at top, rgba(30, 64, 175, 0.65), rgba(15, 23, 42, 0.95));
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .sway-container {
+      position: relative;
+      height: 220px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .horizon {
+      position: absolute;
+      inset-inline: -30px;
+      bottom: 42px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.6), transparent);
+      opacity: 0.7;
+    }
+
+    .sway-line {
+      width: 4px;
+      height: 180px;
+      border-radius: 999px;
+      background: linear-gradient(to top, rgba(15, 23, 42, 1), rgba(56, 189, 248, 1));
+      box-shadow:
+        0 0 18px rgba(56, 189, 248, 0.6),
+        0 0 32px rgba(37, 99, 235, 0.4);
+      transform-origin: bottom center;
+      animation: sway 3.2s ease-in-out infinite alternate;
+    }
+
+    .glow-orb {
+      position: absolute;
+      bottom: 42px;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 20%, #f9fafb, #38bdf8);
+      filter: blur(1px);
+      opacity: 0.9;
+      box-shadow:
+        0 0 28px rgba(56, 189, 248, 0.8),
+        0 0 52px rgba(37, 99, 235, 0.7);
+      pointer-events: none;
+      transform: translateX(0);
+      transition: transform 0.4s ease-out;
+    }
+
+    @keyframes sway {
+      from {
+        transform: rotate(calc(var(--sway-angle) * -1));
+      }
+      to {
+        transform: rotate(var(--sway-angle));
+      }
+    }
+
+    .direction-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(148, 163, 184, 0.9);
+      margin-top: 12px;
+    }
+
+    .controls { 
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: rgba(209, 213, 219, 0.9);
+    }
+
+    .controls-row span.label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.72rem;
+      color: rgba(148, 163, 184, 0.95);
+    }
+
+    .today-tag {
+      font-size: 0.75rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: rgba(226, 232, 240, 0.95);
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-block: 2px 0;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      outline: none;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #f9fafb, #38bdf8);
+      border: 0;
+      box-shadow:
+        0 0 10px rgba(56, 189, 248, 0.7),
+        0 0 24px rgba(37, 99, 235, 0.9);
+      cursor: pointer;
+      margin-top: -8px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #f9fafb, #38bdf8);
+      border: 0;
+      box-shadow:
+        0 0 10px rgba(56, 189, 248, 0.7),
+        0 0 24px rgba(37, 99, 235, 0.9);
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: rgba(148, 163, 184, 0.95);
+      line-height: 1.5;
+    }
+
+    .environment {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .environment span {
+      color: #a5b4fc;
+    }
+
+    footer {
+      margin-top: 4px;
+      font-size: 0.7rem;
+      color: rgba(100, 116, 139, 0.95);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(148, 163, 184, 0.7); }
+
+    @media (min-height: 780px) {
+      .sway-container { height: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title-row">
+        <div>
+          <div class="app-title">Sway</div>
+          <div class="subtitle">Shape todays wind.</div>
+        </div>
+        <div class="badge">Ambient Mini</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="sway-shell">
+          <div class="sway-container" id="sway-container">
+            <div class="horizon"></div>
+            <div class="sway-line" id="sway-line"></div>
+            <div class="glow-orb" id="glow-orb"></div>
+          </div>
+          <div class="direction-labels">
+            <span>Soft</span>
+            <span>Still</span>
+            <span>Wild</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="controls-row">
+            <span class="label">Wind for today</span>
+            <span class="today-tag" id="today-label">Today</span>
+          </div>
+          <div class="slider-wrap">
+            <input type="range" id="wind-slider" min="-100" max="100" value="0" aria-label="Adjust todays wind">
+          </div>
+          <p class="hint">
+            Drag the slider or nudge the line. Your pattern for today is stored on this device only.
+          </p>
+          <div class="environment" id="environment-indicator">
+            Detecting environment…
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Saved locally only.</span>
+      <span class="dot"></span>
+    </footer>
+  </div>
+
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
